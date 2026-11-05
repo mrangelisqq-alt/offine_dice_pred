@@ -3,205 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>visionary 4/4 predicter</title>
+<title>Visionary - Color Probability & History</title>
 <style>
-  body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; min-height: 100vh; margin: 0; }
+  body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 30px 15px; min-height: 100vh; margin: 0; }
   h1 { color: #00d4ff; font-size: 24px; margin-bottom: 20px; letter-spacing: 1px; }
-  .input-row { display: flex; gap: 10px; margin-bottom: 30px; width: 100%; max-width: 600px; }
-  input[type="text"] { flex: 1; padding: 14px 16px; border: 1px solid #2a2d3a; border-radius: 8px; background: #1a1d27; color: #fff; font-size: 16px; outline: none; }
-  input[type="text"]:focus { border-color: #00d4ff; }
-  button { padding: 14px 28px; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-  #connectBtn { background: #00d4ff; color: #0f1117; }
-  #connectBtn:hover { background: #00b8e6; }
-  .dice-row { display: flex; gap: 20px; margin: 30px 0; }
-  .die { width: 100px; height: 100px; border-radius: 12px; background: #1a1d27; border: 2px solid #2a2d3a; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: #555; transition: 0.1s; }
-  .die .label { font-size: 11px; color: #444; margin-bottom: 4px; }
-  .die .color { font-size: 16px; text-transform: uppercase; }
-  .die.active { border-color: #00d4ff; box-shadow: 0 0 20px rgba(0,212,255,0.3); }
-  .die.predicted { color: #fff; }
-  #status { margin-top: 20px; font-size: 13px; color: #888; min-height: 20px; }
-  #log { width: 100%; max-width: 600px; margin-top: 30px; background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; max-height: 250px; overflow-y: auto; }
-  #log div { padding: 3px 0; border-bottom: 1px solid #222; color: #999; }
+  
+  .card { background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 12px; padding: 20px; width: 100%; max-width: 600px; box-sizing: border-box; margin-bottom: 20px; }
+  .card-title { font-size: 14px; color: #888; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
+
+  /* Кнопки выбора цвета */
+  .color-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+  .btn-color { padding: 12px; border: 2px solid transparent; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; color: #fff; background: #222533; }
+  .btn-color:hover { opacity: 0.85; transform: translateY(-2px); }
+  
+  .btn-red { background: #ff4d4d; }
+  .btn-orange { background: #ffa500; color: #111; }
+  .btn-yellow { background: #ffff00; color: #111; }
+  .btn-green { background: #2ecc71; color: #111; }
+  .btn-blue { background: #3498db; }
+  .btn-purple { background: #9b59b6; }
+
+  /* Панель управления */
+  .controls { display: flex; gap: 10px; }
+  .btn-action { flex: 1; padding: 10px; border: 1px solid #2a2d3a; border-radius: 8px; background: #222533; color: #aaa; font-weight: bold; cursor: pointer; transition: 0.2s; }
+  .btn-action:hover { background: #2a2d3a; color: #fff; }
+
+  /* Статистика и шансы */
+  .stats-list { display: flex; flex-direction: column; gap: 12px; }
+  .stat-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .stat-label { width: 70px; font-weight: bold; font-size: 13px; }
+  .progress-bar-bg { flex: 1; height: 10px; background: #0f1117; border-radius: 5px; overflow: hidden; border: 1px solid #2a2d3a; }
+  .progress-bar-fill { height: 100%; width: 0%; transition: width 0.3s ease; }
+  .stat-val { width: 90px; text-align: right; font-family: monospace; font-size: 13px; color: #00d4ff; }
+
+  /* История */
+  #historyLog { max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+  .history-item { display: flex; justify-content: space-between; padding: 6px 10px; background: #0f1117; border-radius: 6px; border-left: 4px solid #555; }
 </style>
 </head>
 <body>
-<h1>visionary 4/4 predicter</h1>
 
-<div class="input-row">
-  <input type="text" id="sessionId" placeholder="Enter Session ID" value="">
-  <button id="connectBtn" onclick="connect()">CONNECT</button>
+<h1>visionary analytics</h1>
+
+<!-- Выбор цветов -->
+<div class="card">
+  <div class="card-title">Добавить результат</div>
+  <div class="color-grid">
+    <button class="btn-color btn-red" onclick="addRoll('Red')">Red</button>
+    <button class="btn-color btn-orange" onclick="addRoll('Orange')">Orange</button>
+    <button class="btn-color btn-yellow" onclick="addRoll('Yellow')">Yellow</button>
+    <button class="btn-color btn-green" onclick="addRoll('Green')">Green</button>
+    <button class="btn-color btn-blue" onclick="addRoll('Blue')">Blue</button>
+    <button class="btn-color btn-purple" onclick="addRoll('Purple')">Purple</button>
+  </div>
+  <div class="controls">
+    <button class="btn-action" onclick="undoLast()">Undo Last</button>
+    <button class="btn-action" onclick="clearAll()">Reset All</button>
+  </div>
 </div>
 
-<div class="dice-row">
-  <div class="die" id="die1"><span class="label">DIE #1</span><span class="color">—</span></div>
-  <div class="die" id="die2"><span class="label">DIE #2</span><span class="color">—</span></div>
-  <div class="die" id="die3"><span class="label">DIE #3</span><span class="color">—</span></div>
-  <div class="die" id="die4"><span class="label">DIE #4</span><span class="color">—</span></div>
+<!-- Статистика -->
+<div class="card">
+  <div class="card-title">Шансы и Статистика (Всего: <span id="totalCount">0</span>)</div>
+  <div class="stats-list" id="statsList"></div>
 </div>
 
-<div id="status">Status: Idle</div>
-<div id="log"></div>
+<!-- История -->
+<div class="card">
+  <div class="card-title">История бросков</div>
+  <div id="historyLog">
+    <div style="color: #555;">История пуста</div>
+  </div>
+</div>
 
 <script>
 const COLORS = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple'];
-const COLOR_HEX = { Red: '#ff0000', Orange: '#ffa500', Yellow: '#ffff00', Green: '#00ff00', Blue: '#0000ff', Purple: '#800080' };
+const COLOR_HEX = {
+  Red: '#ff4d4d',
+  Orange: '#ffa500',
+  Yellow: '#ffff00',
+  Green: '#2ecc71',
+  Blue: '#3498db',
+  Purple: '#9b59b6'
+};
 
-const WSS_URL = "wss://s-gke-euw1-nssi3-4.europe-west1.firebasedatabase.app/.ws?v=5&p=1:593264096902:web:ade81a908d70bdf7d90307&ns=offline-dice-verify-default-rtdb";
+let history = [];
 
-let currentSession = null;
-let ws = null;
-// Firma dell'ultimo roll processato: usiamo ID + colori per evitare
-// di perdere roll nuovi quando Firebase riusa gli stessi path/ID.
-let lastProcessedSignature = null;
-
-function log(msg) {
-  const el = document.getElementById('log');
-  const d = document.createElement('div');
-  d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  el.prepend(d);
+function addRoll(color) {
+  history.push({ color, time: new Date().toLocaleTimeString() });
+  updateUI();
 }
 
-function setStatus(msg) {
-  document.getElementById('status').textContent = 'Status: ' + msg;
+function undoLast() {
+  if (history.length > 0) {
+    history.pop();
+    updateUI();
+  }
 }
 
-function connect() {
-  const sid = document.getElementById('sessionId').value.trim();
-  if (!sid) { setStatus('ERROR: No session ID'); return; }
+function clearAll() {
+  if (confirm('Очистить всю историю?')) {
+    history = [];
+    updateUI();
+  }
+}
 
-  if (ws) { ws.close(); ws = null; }
+function updateUI() {
+  const total = history.length;
+  document.getElementById('totalCount').textContent = total;
 
-  currentSession = sid;
-  lastProcessedSignature = null;
-  document.querySelectorAll('.die').forEach(d => {
-    d.classList.remove('active', 'predicted');
-    const c = d.querySelector('.color');
-    c.textContent = '—';
-    c.style.color = '';
+  // Подсчет количества каждого цвета
+  const counts = { Red: 0, Orange: 0, Yellow: 0, Green: 0, Blue: 0, Purple: 0 };
+  history.forEach(item => counts[item.color]++);
+
+  // Отрисовка статистики
+  const statsContainer = document.getElementById('statsList');
+  statsContainer.innerHTML = '';
+
+  COLORS.forEach(color => {
+    const count = counts[color];
+    const percent = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+
+    const row = document.createElement('div');
+    row.className = 'stat-item';
+    row.innerHTML = `
+      <div class="stat-label" style="color: ${COLOR_HEX[color]}">${color}</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: ${percent}%; background: ${COLOR_HEX[color]}"></div>
+      </div>
+      <div class="stat-val">${percent}% (${count})</div>
+    `;
+    statsContainer.appendChild(row);
   });
 
-  setStatus('Connecting to WebSocket...');
-  log(`Connecting to Firebase WSS for session ${sid}`);
-
-  ws = new WebSocket(WSS_URL);
-
-  ws.onopen = () => {
-    setStatus('Connected - Authenticating');
-    log('WSS stream OPEN. Waiting for handshake.');
-  };
-
-  ws.onmessage = (event) => {
-    // Debug: decommenta la riga sotto per vedere TUTTO quello che manda Firebase
-    // console.log('RAW WSS:', event.data);
-
-    try {
-      const data = JSON.parse(event.data);
-
-      // --- Handshake Firebase ---
-      if (data.t === 'c' && data.d && data.d.t === 'h') {
-        log('Handshake received. Sending LISTEN command.');
-        setStatus('Listening (real-time)');
-
-        const listenCmd = {
-          t: "d",
-          d: {
-            r: 1,
-            a: "q",
-            b: {
-              p: `/sessions/${currentSession}/rolls`,
-              h: ""
-            }
-          }
-        };
-        ws.send(JSON.stringify(listenCmd));
-        log(`Sent Firebase LISTEN for /sessions/${currentSession}/rolls`);
-        return;
-      }
-
-      // --- Dati ---
-      if (data.t === 'd' && data.d) {
-        const b = data.d.b;
-        const p = data.d.p || '';
-
-        if (!b) return;
-
-        // Gestisce un singolo oggetto roll, con ID esplicito
-        const tryProcess = (id, obj) => {
-          if (!obj || !obj.names) return;
-
-          const keys = Object.keys(obj.names).sort((a, b) => parseInt(a) - parseInt(b));
-          const colors = keys.map(k => {
-            const val = String(obj.names[k]).trim();
-            const cap = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-            return COLORS.includes(cap) ? cap : 'Unknown';
-          });
-
-          if (colors.length !== 4 || colors.includes('Unknown')) {
-            return;
-          }
-
-          // Firma basata su ID + colori: così se il backend riusa lo stesso
-          // ID ma cambiano i colori, lo processiamo comunque come nuovo roll.
-          const signature = id + '|' + colors.join(',');
-          if (signature === lastProcessedSignature) return;
-
-          lastProcessedSignature = signature;
-          displayRoll(colors);
-        };
-
-        // Caso A: riferimento diretto a un singolo roll
-        // es. p = "/sessions/XXX/rolls/-Nxxx", b = { names: {...} }
-        if (b.names && p.includes('/rolls/')) {
-          const id = p.split('/rolls/')[1].split('/')[0];
-          tryProcess(id, b);
-          return;
-        }
-
-        // Caso B: mappa di roll (snapshot completo sotto /rolls)
-        // es. b = { "-Nxxx": { names: {...} }, "-Nyyy": { names: {...} } }
-        if (typeof b === 'object' && !b.names) {
-          const ids = Object.keys(b).sort(); // gli ID push di Firebase sono ordinabili cronologicamente
-          ids.forEach(id => tryProcess(id, b[id]));
-          return;
-        }
-
-        // Caso C: oggetto singolo senza path esplicito
-        if (b.names) {
-          tryProcess('single', b);
-          return;
-        }
-      }
-    } catch (e) {
-      log('Parse error: ' + e.message);
-    }
-  };
-
-  ws.onerror = () => {
-    log('WSS error occurred');
-    setStatus('Error');
-  };
-
-  ws.onclose = () => {
-    log('WSS stream CLOSED');
-    if (document.getElementById('status').textContent.includes('Listening')) {
-      setStatus('Disconnected');
-    }
-  };
-}
-
-function displayRoll(colors) {
-  log('INTERCEPTED WINNING COLORS: [' + colors.join(', ') + ']');
-
-  for (let i = 0; i < 4; i++) {
-    const die = document.getElementById('die' + (i + 1));
-    const c = die.querySelector('.color');
-    c.textContent = colors[i];
-    c.style.color = COLOR_HEX[colors[i]] || '#fff';
-    die.classList.add('active', 'predicted');
+  // Отрисовка истории
+  const historyContainer = document.getElementById('historyLog');
+  if (total === 0) {
+    historyContainer.innerHTML = '<div style="color: #555;">История пуста</div>';
+    return;
   }
 
-  setStatus('Current Roll: [' + colors.join(', ') + ']');
+  historyContainer.innerHTML = '';
+  // Показываем последние броски вверху
+  [...history].reverse().forEach((item, index) => {
+    const el = document.createElement('div');
+    el.className = 'history-item';
+    el.style.borderLeftColor = COLOR_HEX[item.color];
+    el.innerHTML = `
+      <span style="color: ${COLOR_HEX[item.color]}; font-weight: bold;">${item.color}</span>
+      <span style="color: #666;">#${total - index} — ${item.time}</span>
+    `;
+    historyContainer.appendChild(el);
+  });
 }
+
+// Инициализация пустой статистики при загрузке
+updateUI();
 </script>
 </body>
 </html>
